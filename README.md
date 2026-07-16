@@ -66,8 +66,8 @@ tests/              # 测试
 
 ## 相关项目
 
-- [mes-admin](https://github.com/xxx/mes-admin) — PC 管理后台
-- [mes-mobile](https://github.com/xxx/mes-mobile) — 移动端
+- [mes-admin](https://github.com/jiujiezongheti/mes-admin) — PC 管理后台
+- [mes-mobile](https://github.com/jiujiezongheti/mes-mobile) — 移动端
 
 ## 截图
 
