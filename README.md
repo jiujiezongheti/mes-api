@@ -35,6 +35,10 @@ cp .env.example .env
 
 # 修改 .env 中的数据库连接信息
 
+# 执行数据库迁移（建表 + 初始化数据）
+php vendor/bin/phinx migrate
+php vendor/bin/phinx seed:run
+
 # 启动服务
 php windows.php
 
@@ -68,10 +72,6 @@ tests/              # 测试
 
 - [mes-admin](https://github.com/jiujiezongheti/mes-admin) — PC 管理后台
 - [mes-mobile](https://github.com/jiujiezongheti/mes-mobile) — 移动端
-
-## 截图
-
-> TODO
 
 ## 开源协议
 
