@@ -9,6 +9,7 @@ use app\admin\controller\PermissionController;
 use app\admin\controller\MaterialController;
 use app\admin\controller\MaterialCategoryController;
 use app\admin\controller\UnitController;
+use app\admin\controller\BomController;
 use app\middleware\AdminAuthMiddleware;
 use app\middleware\PermissionMiddleware;
 
@@ -84,6 +85,21 @@ Route::group('/admin', function () {
                 Route::post('/delete', [UnitController::class, 'delete'])->setParams(['permission' => 'admin:unit:delete']);
                 Route::get('/export', [UnitController::class, 'export'])->setParams(['permission' => 'admin:unit:export']);
                 Route::post('/import', [UnitController::class, 'import'])->setParams(['permission' => 'admin:unit:import']);
+            });
+        });
+
+        Route::group('/production', function () {
+            Route::group('/bom', function () {
+                Route::get('/list', [BomController::class, 'list'])->setParams(['permission' => 'admin:bom:list']);
+                Route::get('/detail', [BomController::class, 'detail'])->setParams(['permission' => 'admin:bom:list']);
+                Route::post('/create', [BomController::class, 'create'])->setParams(['permission' => 'admin:bom:create']);
+                Route::post('/update', [BomController::class, 'update'])->setParams(['permission' => 'admin:bom:edit']);
+                Route::post('/delete', [BomController::class, 'delete'])->setParams(['permission' => 'admin:bom:delete']);
+                Route::get('/tree', [BomController::class, 'tree'])->setParams(['permission' => 'admin:bom:list']);
+                Route::get('/where-used', [BomController::class, 'whereUsed'])->setParams(['permission' => 'admin:bom:list']);
+                Route::post('/copy', [BomController::class, 'copy'])->setParams(['permission' => 'admin:bom:create']);
+                Route::get('/export', [BomController::class, 'export'])->setParams(['permission' => 'admin:bom:export']);
+                Route::post('/import', [BomController::class, 'import'])->setParams(['permission' => 'admin:bom:import']);
             });
         });
     })->middleware([AdminAuthMiddleware::class, PermissionMiddleware::class]);
