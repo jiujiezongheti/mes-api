@@ -21,6 +21,12 @@ class UserLogic
         if (!empty($params['nickname'])) {
             $query->where('nickname', 'like', "%{$params['nickname']}%");
         }
+        if (!empty($params['phone'])) {
+            $query->where('phone', 'like', "%{$params['phone']}%");
+        }
+        if (!empty($params['email'])) {
+            $query->where('email', 'like', "%{$params['email']}%");
+        }
         if (isset($params['status']) && $params['status'] !== '') {
             $query->where('status', (int)$params['status']);
         }

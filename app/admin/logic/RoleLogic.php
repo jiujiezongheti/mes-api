@@ -32,7 +32,7 @@ class RoleLogic
 
     public static function getAll(): array
     {
-        return Role::orderBy('sort')->orderBy('id')->get()->toArray();
+        return Role::where('status', true)->orderBy('sort')->orderBy('id')->get()->toArray();
     }
 
     public static function create(array $data): void

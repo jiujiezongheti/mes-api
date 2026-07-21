@@ -4,23 +4,23 @@ namespace app\common\model;
 
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class User extends Model
+class Unit extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'user';
+    protected $table = 'unit';
 
     protected $fillable = [
-        'username', 'password', 'nickname', 'avatar',
-        'phone', 'email', 'status', 'sort', 'remark',
-    ];
-
-    protected $hidden = [
-        'password', 'deleted_at',
+        'name', 'status', 'sort', 'remark', 'created_by',
     ];
 
     protected $casts = [
         'status' => 'boolean',
         'sort' => 'integer',
     ];
+
+    public function materials()
+    {
+        return $this->hasMany(Material::class, 'unit_id');
+    }
 }

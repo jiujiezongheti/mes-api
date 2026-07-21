@@ -14,7 +14,7 @@ class PermissionMiddleware implements MiddlewareInterface
 {
     public function process(Request $request, callable $handler): Response
     {
-        $route = Route::getCurrentRoute();
+        $route = $request->route;
         if (!$route) {
             return $handler($request);
         }
