@@ -10,6 +10,9 @@ use app\admin\controller\MaterialController;
 use app\admin\controller\MaterialCategoryController;
 use app\admin\controller\UnitController;
 use app\admin\controller\BomController;
+use app\admin\controller\OrderController;
+use app\admin\controller\WarehouseController;
+use app\admin\controller\StockController;
 use app\middleware\AdminAuthMiddleware;
 use app\middleware\PermissionMiddleware;
 
@@ -100,6 +103,38 @@ Route::group('/admin', function () {
                 Route::post('/copy', [BomController::class, 'copy'])->setParams(['permission' => 'admin:bom:create']);
                 Route::get('/export', [BomController::class, 'export'])->setParams(['permission' => 'admin:bom:export']);
                 Route::post('/import', [BomController::class, 'import'])->setParams(['permission' => 'admin:bom:import']);
+            });
+
+            Route::group('/order', function () {
+                Route::get('/list', [OrderController::class, 'list'])->setParams(['permission' => 'admin:order:list']);
+                Route::get('/detail', [OrderController::class, 'detail'])->setParams(['permission' => 'admin:order:list']);
+                Route::post('/create', [OrderController::class, 'create'])->setParams(['permission' => 'admin:order:create']);
+                Route::post('/update', [OrderController::class, 'update'])->setParams(['permission' => 'admin:order:edit']);
+                Route::post('/delete', [OrderController::class, 'delete'])->setParams(['permission' => 'admin:order:delete']);
+                Route::post('/status', [OrderController::class, 'status'])->setParams(['permission' => 'admin:order:edit']);
+                Route::get('/materials-by-bom', [OrderController::class, 'materialsByBom'])->setParams(['permission' => 'admin:order:create']);
+            });
+        });
+
+        Route::group('/warehouse', function () {
+            Route::get('/list', [WarehouseController::class, 'list'])->setParams(['permission' => 'admin:warehouse:list']);
+            Route::get('/all', [WarehouseController::class, 'all'])->setParams(['permission' => 'admin:warehouse:list']);
+            Route::post('/create', [WarehouseController::class, 'create'])->setParams(['permission' => 'admin:warehouse:create']);
+            Route::post('/update', [WarehouseController::class, 'update'])->setParams(['permission' => 'admin:warehouse:edit']);
+            Route::post('/delete', [WarehouseController::class, 'delete'])->setParams(['permission' => 'admin:warehouse:delete']);
+        });
+
+        Route::group('/stock', function () {
+            Route::get('/inventory-list', [StockController::class, 'inventoryList'])->setParams(['permission' => 'admin:stock:list']);
+            Route::post('/in', [StockController::class, 'in'])->setParams(['permission' => 'admin:stock:in']);
+            Route::post('/out', [StockController::class, 'out'])->setParams(['permission' => 'admin:stock:out']);
+            Route::get('/record-list', [StockController::class, 'recordList'])->setParams(['permission' => 'admin:stock:list']);
+
+            Route::group('/check', function () {
+                Route::get('/list', [StockController::class, 'checkList'])->setParams(['permission' => 'admin:stock:check']);
+                Route::post('/create', [StockController::class, 'checkCreate'])->setParams(['permission' => 'admin:stock:check']);
+                Route::get('/items', [StockController::class, 'checkGetItems'])->setParams(['permission' => 'admin:stock:check']);
+                Route::post('/complete', [StockController::class, 'checkComplete'])->setParams(['permission' => 'admin:stock:check']);
             });
         });
     })->middleware([AdminAuthMiddleware::class, PermissionMiddleware::class]);

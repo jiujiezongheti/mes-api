@@ -33,4 +33,9 @@ class BomMaterial extends Model
     {
         return $this->belongsTo(Bom::class, 'child_bom_id');
     }
+
+    public function substitutes()
+    {
+        return $this->hasMany(BomMaterialSubstitute::class, 'bom_material_id');
+    }
 }

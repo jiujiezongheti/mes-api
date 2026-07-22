@@ -11,11 +11,12 @@ class Bom extends Model
     protected $table = 'bom';
 
     protected $fillable = [
-        'code', 'name', 'material_id', 'quantity', 'status', 'sort', 'remark', 'created_by',
+        'code', 'name', 'material_id', 'quantity', 'status', 'is_default', 'sort', 'remark', 'created_by',
     ];
 
     protected $casts = [
         'status' => 'boolean',
+        'is_default' => 'boolean',
         'sort' => 'integer',
         'quantity' => 'float',
     ];

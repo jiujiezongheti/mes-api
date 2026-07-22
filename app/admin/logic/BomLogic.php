@@ -4,6 +4,7 @@ namespace app\admin\logic;
 
 use app\common\model\Bom;
 use app\common\model\BomMaterial;
+use app\common\model\BomMaterialSubstitute;
 use app\common\model\Material;
 use app\common\exceptions\BusinessException;
 use app\common\ResponseCode;
@@ -74,7 +75,7 @@ class BomLogic
 
     public static function detail(int $id): array
     {
-        $bom = Bom::with('materials.material', 'materials.childBom')->find($id);
+        $bom = Bom::with('materials.material', 'materials.childBom', 'materials.substitutes.material')->find($id);
         if (!$bom) {
             throw new BusinessException('BOM不存在', ResponseCode::ERROR_PARAM->value);
         }
@@ -92,6 +93,13 @@ class BomLogic
                 $m['child_bom_name'] = $m['child_bom']['name'] ?? '';
                 unset($m['child_bom']);
             }
+            if (isset($m['substitutes'])) {
+                foreach ($m['substitutes'] as &$s) {
+                    $s['material_name'] = $s['material']['name'] ?? '';
+                    $s['material_code'] = $s['material']['code'] ?? '';
+                    unset($s['material']);
+                }
+            }
         }
 
         return $data;
@@ -103,12 +111,19 @@ class BomLogic
             throw new BusinessException('BOM编号已存在', ResponseCode::ERROR_PARAM->value);
         }
 
+        $hasExisting = Bom::where('material_id', $data['material_id'])->exists();
+        $isDefault = !$hasExisting || !empty($data['is_default']);
+        if ($isDefault && $hasExisting) {
+            Bom::where('material_id', $data['material_id'])->update(['is_default' => 0]);
+        }
+
         $bom = new Bom();
         $bom->code = $data['code'];
         $bom->name = $data['name'];
         $bom->material_id = $data['material_id'];
         $bom->quantity = $data['quantity'] ?? 1;
         $bom->status = $data['status'] ?? 1;
+        $bom->is_default = $isDefault;
         $bom->sort = $data['sort'] ?? 0;
         $bom->remark = $data['remark'] ?? null;
         $bom->created_by = $data['created_by'] ?? null;
@@ -137,6 +152,12 @@ class BomLogic
         if (isset($data['material_id'])) $bom->material_id = $data['material_id'];
         if (isset($data['quantity'])) $bom->quantity = $data['quantity'];
         if (isset($data['status'])) $bom->status = (int)$data['status'];
+        if (isset($data['is_default']) && !empty($data['is_default'])) {
+            Bom::where('material_id', $bom->material_id)->where('id', '!=', $bom->id)->update(['is_default' => 0]);
+            $bom->is_default = 1;
+        } elseif (isset($data['is_default'])) {
+            $bom->is_default = 0;
+        }
         if (isset($data['sort'])) $bom->sort = (int)$data['sort'];
         if (isset($data['remark'])) $bom->remark = $data['remark'];
         $bom->save();
@@ -165,7 +186,7 @@ class BomLogic
         }
         $list = $query->orderBy('id')->get();
 
-        $headers = ['BOM编号', 'BOM名称', '成品编码', '成品名称', '产出数量', '排序', '状态', '备注'];
+        $headers = ['BOM编号', 'BOM名称', '成品编码', '成品名称', '产出数量', '排序', '是否默认', '状态', '备注'];
         $rows = $list->map(function ($item) {
             return [
                 $item->code,
@@ -174,6 +195,7 @@ class BomLogic
                 $item->material?->name ?? '',
                 $item->quantity,
                 $item->sort,
+                $item->is_default ? '是' : '否',
                 $item->status ? '启用' : '禁用',
                 $item->remark ?? '',
             ];
@@ -217,15 +239,22 @@ class BomLogic
                 $materialId = $material->id;
             }
 
+            $isDefault = ($row['是否默认'] ?? '否') === '是';
+
             $bom = new Bom();
             $bom->code = $code;
             $bom->name = $name;
             $bom->material_id = $materialId;
             $bom->quantity = (float)($row['产出数量'] ?? 1);
             $bom->sort = (int)($row['排序'] ?? 0);
+            $bom->is_default = $isDefault;
             $bom->status = ($row['状态'] ?? '启用') === '启用' ? 1 : 0;
             $bom->remark = $row['备注'] ?? null;
             $bom->save();
+
+            if ($isDefault) {
+                Bom::where('material_id', $materialId)->where('id', '!=', $bom->id)->update(['is_default' => 0]);
+            }
             $imported++;
         }
 
@@ -316,7 +345,7 @@ class BomLogic
             throw new BusinessException('BOM编号已存在', ResponseCode::ERROR_PARAM->value);
         }
 
-        $bom = Bom::with('materials')->find($id);
+        $bom = Bom::with('materials.substitutes')->find($id);
         if (!$bom) {
             throw new BusinessException('BOM不存在', ResponseCode::ERROR_PARAM->value);
         }
@@ -327,12 +356,13 @@ class BomLogic
         $newBom->material_id = $materialId ?? $bom->material_id;
         $newBom->quantity = $bom->quantity;
         $newBom->status = 1;
+        $newBom->is_default = 0;
         $newBom->sort = $bom->sort;
         $newBom->remark = $bom->remark;
         $newBom->save();
 
         foreach ($bom->materials as $m) {
-            BomMaterial::create([
+            $newBm = BomMaterial::create([
                 'bom_id' => $newBom->id,
                 'material_id' => $m->material_id,
                 'quantity' => $m->quantity,
@@ -341,6 +371,14 @@ class BomLogic
                 'sort' => $m->sort,
                 'remark' => $m->remark,
             ]);
+            foreach ($m->substitutes as $sub) {
+                BomMaterialSubstitute::create([
+                    'bom_material_id' => $newBm->id,
+                    'material_id' => $sub->material_id,
+                    'priority' => $sub->priority,
+                    'remark' => $sub->remark,
+                ]);
+            }
         }
     }
 
@@ -349,7 +387,7 @@ class BomLogic
         $sort = 0;
         foreach ($materials as $item) {
             if (empty($item['material_id'])) continue;
-            BomMaterial::create([
+            $bm = BomMaterial::create([
                 'bom_id' => $bomId,
                 'material_id' => $item['material_id'],
                 'quantity' => $item['quantity'] ?? 1,
@@ -358,6 +396,17 @@ class BomLogic
                 'sort' => $item['sort'] ?? $sort,
                 'remark' => $item['remark'] ?? null,
             ]);
+            if (!empty($item['substitutes'])) {
+                foreach ($item['substitutes'] as $sub) {
+                    if (empty($sub['material_id'])) continue;
+                    BomMaterialSubstitute::create([
+                        'bom_material_id' => $bm->id,
+                        'material_id' => $sub['material_id'],
+                        'priority' => $sub['priority'] ?? 0,
+                        'remark' => $sub['remark'] ?? null,
+                    ]);
+                }
+            }
             $sort++;
         }
     }

@@ -19,8 +19,13 @@ class MaterialLogic
         if (!empty($params['name'])) {
             $query->where('name', 'like', "%{$params['name']}%");
         }
-        if (isset($params['type']) && $params['type'] !== '') {
-            $query->where('type', (int)$params['type']);
+        if (!empty($params['type'])) {
+            if (is_string($params['type']) && str_contains($params['type'], ',')) {
+                $types = array_map('intval', explode(',', $params['type']));
+                $query->whereIn('type', $types);
+            } else {
+                $query->where('type', (int)$params['type']);
+            }
         }
         if (isset($params['category_id']) && $params['category_id'] !== '') {
             $query->where('category_id', (int)$params['category_id']);
