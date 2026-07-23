@@ -13,6 +13,7 @@ use app\admin\controller\BomController;
 use app\admin\controller\OrderController;
 use app\admin\controller\WarehouseController;
 use app\admin\controller\StockController;
+use app\admin\controller\CheckTaskController;
 use app\middleware\AdminAuthMiddleware;
 use app\middleware\PermissionMiddleware;
 
@@ -136,6 +137,14 @@ Route::group('/admin', function () {
                 Route::get('/items', [StockController::class, 'checkGetItems'])->setParams(['permission' => 'admin:stock:check']);
                 Route::post('/complete', [StockController::class, 'checkComplete'])->setParams(['permission' => 'admin:stock:check']);
             });
+        });
+
+        Route::group('/check-task', function () {
+            Route::get('/list', [CheckTaskController::class, 'list'])->setParams(['permission' => 'admin:stock:check']);
+            Route::post('/create', [CheckTaskController::class, 'create'])->setParams(['permission' => 'admin:stock:check']);
+            Route::get('/detail', [CheckTaskController::class, 'detail'])->setParams(['permission' => 'admin:stock:check']);
+            Route::post('/approve', [CheckTaskController::class, 'approve'])->setParams(['permission' => 'admin:stock:check']);
+            Route::post('/reject', [CheckTaskController::class, 'reject'])->setParams(['permission' => 'admin:stock:check']);
         });
     })->middleware([AdminAuthMiddleware::class, PermissionMiddleware::class]);
 });
